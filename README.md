@@ -84,7 +84,7 @@ Satu Scatter Plot Besar: Alternatif lain adalah bubble chart tunggal (Harga vs. 
 
 2. Desain & Styling (Tugas Anggota 3): Memastikan tampilan dashboard yang profesional, responsif, dan konsisten dengan tema gelap Steam juga membutuhkan waktu tuning yang cukup lama.
 
-3. Transformasi Data & Analisis Awal: Tugas ini, yang meliputi konversi format data dan EDA, adalah tugas yang paling cepat diselesaikan, diperkirakan total 6-8 jam gabungan antara Anggota 1 dan Anggota 5.
+3. Transformasi Data & Analisis Awal: Tugas ini, yang meliputi konversi format data dan EDA, adalah tugas yang paling cepat diselesaikan, diperkirakan total 2-3 jam gabungan antara Anggota 1 dan Anggota 5.
 
 
 **📊 Sumber Data**
