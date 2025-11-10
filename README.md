@@ -85,11 +85,3 @@ Sumber Data
 Dataset utama: steam_store_data_2024.csv
 
 Data di-pre-processing dan di-embed langsung ke dalam file .html untuk mempermudah hosting dan performa.
-
-**🏃 Menjalankan Secara Lokal**
-
-Karena semua library (Plotly.js) dan data sudah tertanam di dalam file steam_deal_explorer.html, Anda tidak perlu menjalankan web server lokal.
-
-Clone atau unduh repositori ini.
-
-Buka file steam_deal_explorer.html di browser favorit Anda.
