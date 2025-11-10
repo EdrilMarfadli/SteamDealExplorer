@@ -60,7 +60,7 @@ Intinya, plotly lebih mudah digunakan dan sederhana.
 1. Edril Marfadli : Dataset & csv
 2. Aqilah Fikry Albari: HTML
 3. Fairuz Afif Herdanto
-4. Gilang Yanuar
+4. Gilang Yanuar : 
 5. Reggy Firmansyah
    
 - Estimasi Waktu Pengerjaan
