@@ -64,7 +64,7 @@ Daftar "Top Savings" (Tabel Teks): Grafik bagus untuk analisis pola, tetapi untu
 
 **Alternatif yang Dipertimbangkan**
 
-Treemap: Saya mempertimbangkan menggunakan treemap untuk memvisualisasikan game berdasarkan kategori atau popularitas. Namun, ini saya batalkan karena kurang efektif untuk tujuan utama (mencari diskon) dan akan membuat dashboard terlalu padat.
+Treemap: kami mempertimbangkan menggunakan treemap untuk memvisualisasikan game berdasarkan kategori atau popularitas. Namun, ini saya batalkan karena kurang efektif untuk tujuan utama (mencari diskon) dan akan membuat dashboard terlalu padat.
 
 Satu Scatter Plot Besar: Alternatif lain adalah bubble chart tunggal (Harga vs. Diskon, dengan ukuran = skor ulasan). Ini ditolak karena bar chart dan filter multi-select terpisah jauh lebih mudah dibaca dan lebih presisi untuk memfilter berdasarkan kualitas.
 
