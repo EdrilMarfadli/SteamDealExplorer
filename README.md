@@ -60,8 +60,8 @@ Intinya, plotly lebih mudah digunakan dan sederhana.
 1. Edril Marfadli : Dataset & csv
 2. Aqilah Fikry Albari: HTML
 3. Fairuz Afif Herdanto : Analisis Data Awal & Validasi
-4. Gilang Yanuar : 
-5. Reggy Firmansyah
+4. Gilang Yanuar : Desain UI/UX & Styling
+5. Reggy Firmansyah: Dokumentasi dan pengujian
    
 - Estimasi Waktu Pengerjaan
 
