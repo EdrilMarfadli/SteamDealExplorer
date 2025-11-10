@@ -65,7 +65,7 @@ Intinya, plotly lebih mudah digunakan dan sederhana.
    
 - Estimasi Waktu Pengerjaan
 
-Total waktu pengerjaan sekitar 14–18 jam.
+Total waktu pengerjaan sekitar 4-5 jam.
 
 - Bagian yang Paling Banyak Memakan Waktu
 Beberapa bagian yang memakan waktu:
