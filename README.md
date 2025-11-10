@@ -7,7 +7,7 @@ Visualisasi ini di-hosting menggunakan GitHub Pages. Anda bisa mengakses versi l
 https://edrilmarfadli.github.io/SteamDealExplorer/steam_deal_explorer.html
 
 📖 **Tentang Proyek Ini**
-Seringkali sulit untuk menemukan game yang bagus sekaligus murah di Steam. Diskon besar (misalnya -80%) belum tentu berarti gamenya bagus (bisa jadi ulasannya 'Mixed' atau 'Mostly Negative'). Sebaliknya, game berkualitas tinggi (ulasSAn 'Overwhelmingly Positive') mungkin jarang diskon.
+Seringkali sulit untuk menemukan game yang bagus sekaligus murah di Steam. Diskon besar (misalnya -80%) belum tentu berarti gamenya bagus (bisa jadi ulasannya 'Mixed' atau 'Mostly Negative'). Sebaliknya, game berkualitas tinggi (ulassn 'Overwhelmingly Positive') mungkin jarang diskon.
 
 Steam Deal Explorer adalah alat bantu untuk mengatasi masalah ini. Dashboard interaktif ini memungkinkan pengguna untuk memfilter ribuan game Steam berdasarkan:
 
@@ -22,7 +22,7 @@ Steam Deal Explorer adalah alat bantu untuk mengatasi masalah ini. Dashboard int
 Tujuannya adalah untuk membantu pengguna menemukan game berkualitas tinggi yang sesuai dengan budget dan diskon yang mereka inginkan.
 
 📸 **Tampilan**
-(Sangat disarankan Anda mengambil screenshot dari dashboard Anda dan menambahkannya di sini. Ini membuat README Anda terlihat jauh lebih profesional.)
+<img width="1335" height="968" alt="image" src="https://github.com/user-attachments/assets/6e902d13-d453-4281-a54f-cf4b64952917" />
 
 ✨ **Fitur Utama**
 Filter Interaktif: Cari berdasarkan judul, atur slider untuk rentang harga dan persentase diskon.
