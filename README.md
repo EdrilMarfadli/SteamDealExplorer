@@ -74,7 +74,7 @@ Satu Scatter Plot Besar: Alternatif lain adalah bubble chart tunggal (Harga vs. 
 
 1. Edril Marfadli : Dataset & csv
 2. Aqilah Fikry Albari: HTML
-3. c
+3. Gilang Yanuar Cahaya: HTML
 4. x
    
 **Aspek yang Memakan Waktu Terbanyak:
