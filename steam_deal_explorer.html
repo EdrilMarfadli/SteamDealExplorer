@@ -1,0 +1,247 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Steam Deal Explorer — Interactive (Plotly.js)</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #171a21;
+    --panel: #1b2838;
+    --muted: #2a475e;
+    --accent: #66c0f4;
+    --accent-2: #4aa3d2;
+    --text: #e5eaef;
+    --text-dim: #b7c5d3;
+    --ok: #8ae234;
+    --warn: #f9c74f;
+    --bad: #e67e22;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  .wrap { max-width: 1200px; margin: 24px auto 80px; padding: 0 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  .title { font-weight: 800; font-size: 28px; letter-spacing: .3px; }
+  .badge { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #012235; font-weight: 800; padding: 6px 10px; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,.35); }
+  .panel { background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)); border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04); }
+  .grid { display: grid; grid-template-columns: 1.3fr .7fr; gap: 16px; }
+  .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+  .control { background: var(--panel); border: 1px solid rgba(255,255,255,.06); padding: 10px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+  label { font-size: 12px; color: var(--text-dim); }
+  input[type="text"], select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.08); background: #0f141b; color: var(--text); outline: none; }
+  input[type="range"] { width: 100%; }
+  .charts { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .list { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 540px; overflow: auto; }
+  .card { background: var(--panel); border:1px solid rgba(255,255,255,.06); border-radius: 14px; padding: 12px; display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+  .game-title { font-weight: 700; color: var(--text); }
+  .muted { color: var(--text-dim); font-size: 12px; }
+  .price { font-weight: 800; }
+  .strike { text-decoration: line-through; opacity: .6; margin-right: 6px; }
+  .disc { font-weight: 800; color: var(--ok); }
+  .footer-note { margin-top: 6px; font-size: 12px; color: var(--text-dim); }
+  @media(max-width: 960px) { .grid { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">Steam Deal Explorer <span class="badge">Interactive</span></div>
+    <div class="muted">Built with Plotly.js • Dark theme inspired by Steam</div>
+  </header>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="control">
+        <label for="q">Search title</label>
+        <input id="q" type="text" placeholder="Type to filter… e.g. 'dragon'">
+      </div>
+      <div class="control">
+        <label>Price range ($) <span id="priceLabel"></span></label>
+        <input id="priceMin" type="range" min="0" max="100" step="1" value="0">
+        <input id="priceMax" type="range" min="0" max="120" step="1" value="120">
+      </div>
+      <div class="control">
+        <label>Discount (%) <span id="discLabel"></span></label>
+        <input id="discMin" type="range" min="0" max="100" step="1" value="0">
+        <input id="discMax" type="range" min="0" max="100" step="1" value="100">
+      </div>
+      <div class="control">
+        <label for="sent">Recent Reviews</label>
+        <select id="sent" multiple size="5">
+          <option>Overwhelmingly Positive</option>
+          <option>Very Positive</option>
+          <option>Mostly Positive</option>
+          <option>Mixed</option>
+          <option>Mostly Negative</option>
+          <option>Very Negative</option>
+          <option>Overwhelmingly Negative</option>
+        </select>
+      </div>
+    </div>
+    <div class="footer-note">Tip: drag to pan, scroll or pinch to zoom. Double-click to reset. Hold shift to box-zoom.</div>
+  </div>
+
+  <div class="grid" style="margin-top:16px;">
+    <div class="charts">
+      <div id="scatter" class="panel" style="height:420px;"></div>
+      <div class="row">
+        <div id="hist" class="panel" style="height:360px;"></div>
+        <div id="bar" class="panel" style="height:360px;"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="muted" style="margin-bottom:8px;">Top savings in filtered view</div>
+      <div id="list" class="list"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DATA = [{"title": "Ori and the Will of the Wisps", "description": "Play the critically acclaimed masterpiece. Embark on a new journey in a vast, exotic world where you’ll encounter towering enemies and challenging puzzles on your quest to unravel Ori’s destiny.", "price_num": 9.89, "disc_frac": 0.67, "recentReviews": "Overwhelmingly Positive", "allReviews": "Overwhelmingly Positive", "orig_price": 29.969696969696976, "savings": 20.079696969696975}, {"title": "Flashing Lights - Police, Firefighting, Emergency Services (EMS) Simulator", "description": "Play solo or in up to 10-player multiplayer co-op! Flashing Lights is an open world police, firefighting and EMS simulator game with plenty of opportunity for role-play or more relaxed fun with friends. Become the law or save lives! Discover leagues of player-created mods!", "price_num": 8.49, "disc_frac": 0.66, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 24.97058823529412, "savings": 16.48058823529412}, {"title": "Thronefall", "description": "A minimalist game about building and defending your little kingdom.", "price_num": 5.24, "disc_frac": 0.25, "recentReviews": "Overwhelmingly Positive", "allReviews": "Overwhelmingly Positive", "orig_price": 6.986666666666667, "savings": 1.746666666666667}, {"title": "DRAGON QUEST® XI S: Echoes of an Elusive Age™ - Definitive Edition", "description": "The Definitive Edition includes the critically acclaimed DRAGON QUEST XI, plus additional scenarios, orchestral soundtrack, 2D mode and more! Whether you are a longtime fan or a new adventurer, this is the ultimate DQXI experience.", "price_num": 23.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 39.983333333333334, "savings": 15.993333333333336}, {"title": "UNDYING", "description": "As Anling’s zombie infection sets in, her days are numbered. The struggle to survive is made ever more paramount as she must ensure her son Cody stays alive. She must teach him how to survive in this new world at any cost…", "price_num": 13.99, "disc_frac": 0.3, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 19.985714285714288, "savings": 5.995714285714287}, {"title": "Headbangers: Rhythm Royale", "description": "Headbangers is a light-hearted, Rhythm Battle Royale Game where you and 29 other Pigeons compete against each other, all to complete your quest of claiming the title of Master Headbanger!", "price_num": 13.39, "disc_frac": 0.33, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 19.985074626865675, "savings": 6.595074626865674}, {"title": "Bendy and the Dark Revival", "description": "Bendy and the Dark Revival® is a first-person survival horror game set in the creepiest cartoon studio to ever exist. Discover the truth. Escape the studio. Above all, fear the Ink Demon…and survive.", "price_num": 5.99, "disc_frac": 0.8, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 29.950000000000006, "savings": 23.960000000000008}, {"title": "CARRION", "description": "CARRION is a reverse horror game in which you assume the role of an amorphous creature of unknown origins, stalking and consuming those that imprisoned you.", "price_num": 5.99, "disc_frac": 0.7, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 19.966666666666665, "savings": 13.976666666666665}, {"title": "Thymesia", "description": "Thymesia is a gruelling action-RPG with fast-paced combat and an intricate plague weapon system. In a kingdom where death spreads, play as a mysterious character known by the code name \"Corvus\". Prey upon your enemies, wield the power of disease and find the truth in your own memories.", "price_num": 14.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 24.983333333333334, "savings": 9.993333333333334}, {"title": "Boxes: Lost Fragments", "description": "As a legendary thief, your next assignment lures you into a grand and lavish mansion. There you find a series of puzzle boxes, designed for an unknown purpose. What should have been a quick in-and-out, gradually turns into your own harrowing struggle for freedom and answers.", "price_num": 13.49, "disc_frac": 0.1, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 14.988888888888889, "savings": 1.4988888888888887}, {"title": "HELLCARD", "description": "Hellcard is a unique cooperative deck builder rogue-like game. Descend into the paper dungeons on your own, recruit computer-controlled companions or join other players' lobbies in fast-paced tactical card battles against the armies of darkness and the Archdemon himself!", "price_num": 15.79, "disc_frac": 0.21, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 19.987341772151897, "savings": 4.197341772151898}, {"title": "Moonbreaker", "description": "Moonbreaker is a turn-based strategy, tactical skirmish game. The game is designed to be a true digital miniatures experience, set in an expansive sci-fi universe crafted by Brandon Sanderson. Direct Captain and Crew in gripping, ever-changing competition and adventure.", "price_num": 22.49, "disc_frac": 0.25, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 29.986666666666665, "savings": 7.496666666666666}, {"title": "BlazBlue Entropy Effect", "description": "Artistic and Magnificent Combat Action, incredibly satisfying combos! Numerous characters, hundreds of moves! This unique action roguelite game will bring you an experience that exceeds expectations.", "price_num": 17.15, "disc_frac": 0.22, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 21.987179487179485, "savings": 4.837179487179487}, {"title": "Poppy Playtime - Chapter 3", "description": NaN, "price_num": 9.89, "disc_frac": 0.34, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 14.984848484848488, "savings": 5.094848484848487}, {"title": "Ready or Not", "description": "Ready or Not is an intense, tactical, first-person shooter that depicts a modern-day world in which SWAT police units are called to defuse hostile and confronting situations.", "price_num": 37.49, "disc_frac": 0.25, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 49.98666666666667, "savings": 12.49666666666667}, {"title": "FINAL FANTASY VII REMAKE INTERGRADE", "description": "Cloud Strife, an ex-SOLDIER operative, descends on the mako-powered city of Midgar. The world of the timeless classic FINAL FANTASY VII is reborn, using cutting-edge graphics technology, a new battle system and an additional adventure featuring Yuffie Kisaragi.", "price_num": 34.99, "disc_frac": 0.5, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 69.98, "savings": 34.99}, {"title": "Destiny 2", "description": "Destiny 2 is an action MMO with a single evolving world that you and your friends can join anytime, anywhere, absolutely free.", "price_num": 14.99, "disc_frac": 0.75, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 59.96, "savings": 44.97}, {"title": "Hogwarts Legacy", "description": "Hogwarts Legacy is an immersive, open-world action RPG. Now you can take control of the action and be at the center of your own adventure in the wizarding world.", "price_num": 35.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 59.98333333333334, "savings": 23.99333333333334}, {"title": "Dead by Daylight", "description": "Dead by Daylight is a multiplayer (4vs1) horror game where one player takes on the role of the savage Killer, and the other four players play as Survivors, trying to escape the Killer and avoid being caught and killed.", "price_num": 7.99, "disc_frac": 0.6, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 19.974999999999998, "savings": 11.984999999999998}, {"title": "Hell Let Loose", "description": "Join the ever expanding experience of Hell Let Loose - a hardcore World War Two first person shooter with epic battles of 100 players with infantry, tanks, artillery, a dynamically shifting front line and a unique resource based RTS-inspired meta-game.", "price_num": 42.24, "disc_frac": 0.35, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 64.98461538461538, "savings": 22.74461538461538}, {"title": "Halo Infinite", "description": "From one of gaming's most iconic sagas, Halo is bigger than ever. Featuring an expansive open-world campaign and a dynamic free to play multiplayer experience.", "price_num": 23.99, "disc_frac": 0.6, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 59.974999999999994, "savings": 35.985}, {"title": "Ultros", "description": "ULTROS is a psychedelic metroidvania where you wake up stranded on The Sarcophagus — a cosmic uterus holding an ancient, demonic being. Trapped in the loop of a black hole, you will have to explore The Sarcophagus and meet its inhabitants to understand the part you play...", "price_num": 22.49, "disc_frac": 0.1, "recentReviews": NaN, "allReviews": NaN, "orig_price": 24.988888888888887, "savings": 2.4988888888888887}, {"title": "Tomb Raider I-III Remastered Starring Lara Croft", "description": "Play the original three Tomb Raider adventures with all expansions and secret levels in this definitive collection.", "price_num": 26.99, "disc_frac": 0.1, "recentReviews": NaN, "allReviews": NaN, "orig_price": 29.988888888888887, "savings": 2.9988888888888887}, {"title": "Ready or Not", "description": "Ready or Not is an intense, tactical, first-person shooter that depicts a modern-day world in which SWAT police units are called to defuse hostile and confronting situations.", "price_num": 37.49, "disc_frac": 0.25, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 49.98666666666667, "savings": 12.49666666666667}, {"title": "FINAL FANTASY VII REMAKE INTERGRADE", "description": "Cloud Strife, an ex-SOLDIER operative, descends on the mako-powered city of Midgar. The world of the timeless classic FINAL FANTASY VII is reborn, using cutting-edge graphics technology, a new battle system and an additional adventure featuring Yuffie Kisaragi.", "price_num": 34.99, "disc_frac": 0.5, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 69.98, "savings": 34.99}, {"title": "God of War", "description": "His vengeance against the Gods of Olympus years behind him, Kratos now lives as a man in the realm of Norse Gods and monsters. It is in this harsh, unforgiving world that he must fight to survive… and teach his son to do the same.", "price_num": 24.99, "disc_frac": 0.5, "recentReviews": "Overwhelmingly Positive", "allReviews": "Overwhelmingly Positive", "orig_price": 49.98, "savings": 24.99}, {"title": "Hogwarts Legacy", "description": "Hogwarts Legacy is an immersive, open-world action RPG. Now you can take control of the action and be at the center of your own adventure in the wizarding world.", "price_num": 35.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 59.98333333333334, "savings": 23.99333333333334}, {"title": "Marvel’s Spider-Man Remastered", "description": "In Marvel’s Spider-Man Remastered, the worlds of Peter Parker and Spider-Man collide in an original action-packed story. Play as an experienced Peter Parker, fighting big crime and iconic villains in Marvel’s New York. Web-swing through vibrant neighborhoods and defeat villains with epic takedowns.", "price_num": 35.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 59.98333333333334, "savings": 23.99333333333334}, {"title": "Marvel’s Spider-Man: Miles Morales", "description": "After the events of Marvel’s Spider-Man Remastered, teenage Miles Morales is adjusting to his new home while following in the footsteps of his mentor, Peter Parker, as a new Spider-Man. When a fierce power struggle threatens to destroy his home, Miles must take up the mantle of Spider-Man and own it", "price_num": 29.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 49.983333333333334, "savings": 19.993333333333336}, {"title": "Days Gone", "description": "Ride and fight into a deadly, post pandemic America. Play as Deacon St. John, a drifter and bounty hunter who rides the broken road, fighting to survive while searching for a reason to live in this open-world action-adventure game.", "price_num": 12.49, "disc_frac": 0.75, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 49.96, "savings": 37.47}, {"title": "Ratchet & Clank: Rift Apart", "description": "Blast your way through an interdimensional adventure with Ratchet and Clank – now on PC! Help them take on an evil emperor from another reality as you jump between action-packed worlds and beyond at hyper-speed!", "price_num": 40.19, "disc_frac": 0.33, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 59.985074626865675, "savings": 19.795074626865677}, {"title": "Ori and the Will of the Wisps", "description": "Play the critically acclaimed masterpiece. Embark on a new journey in a vast, exotic world where you’ll encounter towering enemies and challenging puzzles on your quest to unravel Ori’s destiny.", "price_num": 9.89, "disc_frac": 0.67, "recentReviews": "Overwhelmingly Positive", "allReviews": "Overwhelmingly Positive", "orig_price": 29.969696969696976, "savings": 20.079696969696975}, {"title": "DRAGON QUEST® XI S: Echoes of an Elusive Age™ - Definitive Edition", "description": "The Definitive Edition includes the critically acclaimed DRAGON QUEST XI, plus additional scenarios, orchestral soundtrack, 2D mode and more! Whether you are a longtime fan or a new adventurer, this is the ultimate DQXI experience.", "price_num": 23.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 39.983333333333334, "savings": 15.993333333333336}, {"title": "CRISIS CORE –FINAL FANTASY VII– REUNION", "description": "CRISIS CORE -FINAL FANTASY VII- REUNION is a remaster of CRISIS CORE featuring updated graphics, combat systems and soundtrack. Follow the tale of SOLDIER operative Zack Fair, as he discovers the secrets of Shinra's dark experiments.", "price_num": 29.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 49.983333333333334, "savings": 19.993333333333336}, {"title": "UNCHARTED™: Legacy of Thieves Collection", "description": "Play as Nathan Drake and Chloe Frazer in their own standalone adventures as they confront their pasts and forge their own legacies. This game includes the critically acclaimed single-player stories from both UNCHARTED 4: A Thief’s End and UNCHARTED: The Lost Legacy.", "price_num": 24.99, "disc_frac": 0.5, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 49.98, "savings": 24.99}, {"title": "Thronefall", "description": "A minimalist game about building and defending your little kingdom.", "price_num": 5.24, "disc_frac": 0.25, "recentReviews": "Overwhelmingly Positive", "allReviews": "Overwhelmingly Positive", "orig_price": 6.986666666666667, "savings": 1.746666666666667}, {"title": "Overcooked! 2", "description": "Overcooked returns with a brand-new helping of chaotic cooking action! Journey back to the Onion Kingdom and assemble your team of chefs in classic couch co-op or online play for up to four players. Hold onto your aprons… it’s time to save the world again!", "price_num": 6.24, "disc_frac": 0.75, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 24.96, "savings": 18.72}, {"title": "Dead Space", "description": "The sci-fi survival-horror classic returns, completely rebuilt to offer an even more immersive experience — including visual, audio, and gameplay improvements — while staying faithful to the original game’s thrilling vision.", "price_num": 23.99, "disc_frac": 0.6, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 59.974999999999994, "savings": 35.985}, {"title": "CARRION", "description": "CARRION is a reverse horror game in which you assume the role of an amorphous creature of unknown origins, stalking and consuming those that imprisoned you.", "price_num": 5.99, "disc_frac": 0.7, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 19.966666666666665, "savings": 13.976666666666665}, {"title": "FINAL FANTASY XII THE ZODIAC AGE", "description": "FINAL FANTASY XII THE ZODIAC AGE - This revered classic returns, now fully remastered for the first time for PC, featuring all new and enhanced gameplay.", "price_num": 19.99, "disc_frac": 0.6, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 49.974999999999994, "savings": 29.984999999999996}, {"title": "Atomic Heart", "description": "In a mad and sublime utopian world, take part in explosive encounters. Adapt your fighting style to each opponent, use your environment and upgrade your equipment to fulfill your mission. If you want to reach the truth, you'll have to pay in blood.", "price_num": 29.99, "disc_frac": 0.5, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 59.98, "savings": 29.99}, {"title": "Halo Infinite (Campaign)", "description": NaN, "price_num": 23.99, "disc_frac": 0.6, "recentReviews": "Mixed", "allReviews": "Mixed", "orig_price": 59.974999999999994, "savings": 35.985}, {"title": "Returnal™", "description": "BREAK THE CYCLE Fight to survive as this award-winning third-person shooter brings Selene’s story to PC. Take on roguelike challenges. Engage enemies in bullet hell-fuelled clashes. Share your journey through Returnal™ with another player.", "price_num": 40.19, "disc_frac": 0.33, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 59.985074626865675, "savings": 19.795074626865677}, {"title": "FINAL FANTASY X/X-2 HD Remaster", "description": "FINAL FANTASY X/X-2 HD Remaster celebrates two of the most cherished and beloved entries to the world-renowned franchise, completely remastered in gorgeous High Definition & now available on PC / Windows!", "price_num": 11.99, "disc_frac": 0.6, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 29.974999999999998, "savings": 17.985}, {"title": "The Elder Scrolls V: Skyrim Special Edition", "description": "Winner of more than 200 Game of the Year Awards, The Elder Scrolls V: Skyrim Special Edition brings the epic fantasy to life in stunning detail. The Special Edition includes the critically acclaimed game and add-ons with all-new features.", "price_num": 9.99, "disc_frac": 0.75, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 39.96, "savings": 29.97}, {"title": "STAR WARS™ Empire at War - Gold Pack", "description": "Command or corrupt an entire galaxy in the definitive Star Wars strategy collection. It is a time of galactic civil war. Will you take up the reins of the Rebellion, assume control of the Empire, or rule the Star Wars Underworld?", "price_num": 6.99, "disc_frac": 0.65, "recentReviews": "Overwhelmingly Positive", "allReviews": "Overwhelmingly Positive", "orig_price": 19.97142857142857, "savings": 12.981428571428571}, {"title": "FINAL FANTASY XV WINDOWS EDITION", "description": "Take the journey, now in ultimate quality. Boasting a wealth of bonus content and supporting ultra high-resolution graphical options and HDR 10, you can now enjoy the beautiful and carefully-crafted experience of FINAL FANTASY XV like never before.", "price_num": 13.99, "disc_frac": 0.6, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 34.975, "savings": 20.985}, {"title": "Dead by Daylight", "description": "Dead by Daylight is a multiplayer (4vs1) horror game where one player takes on the role of the savage Killer, and the other four players play as Survivors, trying to escape the Killer and avoid being caught and killed.", "price_num": 7.99, "disc_frac": 0.6, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 19.974999999999998, "savings": 11.984999999999998}, {"title": "Star Wars: Battlefront 2 (Classic, 2005)", "description": "Join the rise of Darth Vader’s elite 501st Legion of Stormtroopers as you fight through an all new story-based saga where every action you take impacts the battlefront and, ultimately, the fate of the Star Wars galaxy.", "price_num": 3.49, "disc_frac": 0.65, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 9.971428571428573, "savings": 6.481428571428573}, {"title": "Destiny 2: Lightfall + Annual Pass", "description": NaN, "price_num": 33.0, "disc_frac": 0.67, "recentReviews": "Mostly Negative", "allReviews": "Mostly Negative", "orig_price": 100.00000000000001, "savings": 67.00000000000001}, {"title": "STRANGER OF PARADISE FINAL FANTASY ORIGIN", "description": "Developed in cooperation between Square Enix and Team NINJA (Koei Tecmo Games), STRANGER OF PARADISE FINAL FANTASY ORIGIN is a hard-core action RPG that takes the FINAL FANTASY series in a new direction. Experience the boldest and most merciless battles in FINAL FANTASY history.", "price_num": 23.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 39.983333333333334, "savings": 15.993333333333336}, {"title": "Grounded", "description": "The world is a vast, beautiful and dangerous place – especially when you have been shrunk to the size of an ant. Can you thrive alongside the hordes of giant insects, fighting to survive the perils of the backyard?", "price_num": 26.79, "disc_frac": 0.33, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 39.985074626865675, "savings": 13.195074626865676}, {"title": "Flashing Lights - Police, Firefighting, Emergency Services (EMS) Simulator", "description": "Play solo or in up to 10-player multiplayer co-op! Flashing Lights is an open world police, firefighting and EMS simulator game with plenty of opportunity for role-play or more relaxed fun with friends. Become the law or save lives! Discover leagues of player-created mods!", "price_num": 8.49, "disc_frac": 0.66, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 24.97058823529412, "savings": 16.48058823529412}, {"title": "LEGO® Star Wars™ - The Complete Saga", "description": "Kick Some Brick in I through VI! Play through all six Star Wars movies in one videogame! Adding new characters, new levels, new features and for the first time ever, the chance to build and battle your way through a fun Star Wars galaxy on your PC!", "price_num": 4.99, "disc_frac": 0.75, "recentReviews": "Overwhelmingly Positive", "allReviews": "Overwhelmingly Positive", "orig_price": 19.96, "savings": 14.97}, {"title": "Bendy and the Dark Revival", "description": "Bendy and the Dark Revival® is a first-person survival horror game set in the creepiest cartoon studio to ever exist. Discover the truth. Escape the studio. Above all, fear the Ink Demon…and survive.", "price_num": 5.99, "disc_frac": 0.8, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 29.950000000000006, "savings": 23.960000000000008}, {"title": "STAR WARS™ - The Force Unleashed™ Ultimate Sith Edition", "description": "A game that will show gamers the deepest, darkest side of the Force in a story that puts them on a collision course with Luke Skywalker himself.", "price_num": 6.99, "disc_frac": 0.65, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 19.97142857142857, "savings": 12.981428571428571}, {"title": "Thymesia", "description": "Thymesia is a gruelling action-RPG with fast-paced combat and an intricate plague weapon system. In a kingdom where death spreads, play as a mysterious character known by the code name \"Corvus\". Prey upon your enemies, wield the power of disease and find the truth in your own memories.", "price_num": 14.99, "disc_frac": 0.4, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 24.983333333333334, "savings": 9.993333333333334}, {"title": "Last Train Home", "description": "The Great War is over - the fight continues. Command a legion of soldiers, desperately trying to make their way home amidst the chaos of civil war. Lead them through the unforgiving wilderness onboard an armored train. Manage your crew and resources and try to survive.", "price_num": 26.39, "disc_frac": 0.34, "recentReviews": "Very Positive", "allReviews": "Very Positive", "orig_price": 39.98484848484849, "savings": 13.594848484848491}, {"title": "Fallout 76", "description": "Bethesda Game Studios welcome you to Fallout 76. Twenty-five years after the bombs fall, you and your fellow Vault Dwellers emerge into post-nuclear America. Explore a vast wasteland in this open-world multiplayer addition to the Fallout story.", "price_num": 9.99, "disc_frac": 0.75, "recentReviews": "Mostly Positive", "allReviews": "Mostly Positive", "orig_price": 39.96, "savings": 29.97}];
+
+// Helpers
+function dollars(x) { return x == null ? '—' : '$' + x.toFixed(2); }
+function pct(x) { return (x*100).toFixed(0) + '%'; }
+
+// Controls
+const q = document.getElementById('q');
+const priceMin = document.getElementById('priceMin');
+const priceMax = document.getElementById('priceMax');
+const discMin = document.getElementById('discMin');
+const discMax = document.getElementById('discMax');
+const sent = document.getElementById('sent');
+const priceLabel = document.getElementById('priceLabel');
+const discLabel = document.getElementById('discLabel');
+
+// Initialize ranges from data
+const minPrice = Math.floor(Math.min(...DATA.map(d=>d.price_num)));
+const maxPrice = Math.ceil(Math.max(...DATA.map(d=>d.price_num)));
+priceMin.min = minPrice; priceMax.min = minPrice;
+priceMin.max = maxPrice; priceMax.max = maxPrice;
+priceMin.value = minPrice; priceMax.value = maxPrice;
+
+function getSelSent() {
+  return Array.from(sent.selectedOptions).map(o=>o.value);
+}
+
+function filterData() {
+  const query = q.value.toLowerCase();
+  const pmin = +priceMin.value, pmax = +priceMax.value;
+  const dmin = +discMin.value/100.0, dmax = +discMax.value/100.0;
+  const sel = getSelSent();
+  return DATA.filter(d => 
+    (!query || d.title.toLowerCase().includes(query)) &&
+    d.price_num >= pmin && d.price_num <= pmax &&
+    d.disc_frac >= dmin && d.disc_frac <= dmax &&
+    (sel.length===0 || sel.includes(d.recentReviews))
+  );
+}
+
+function drawAll() {
+  const F = filterData();
+
+  priceLabel.textContent = `(${priceMin.value} - ${priceMax.value})`;
+  discLabel.textContent = `(${discMin.value}% - ${discMax.value}%)`;
+
+  // Scatter: Original vs Discounted price with y=x line
+  const x = F.map(d => d.orig_price || d.price_num);
+  const y = F.map(d => d.price_num);
+  const hover = F.map(d => `<b>${d.title}</b><br>Recent: ${d.recentReviews}<br>All: ${d.allReviews}<br>Now: ${dollars(d.price_num)}<br>Discount: ${pct(d.disc_frac)}<br>Was: ${d.orig_price?dollars(d.orig_price):'—'}<br>Savings: ${d.savings?dollars(d.savings):'—'}`);
+
+  const lineMax = Math.max(...x.concat(y).filter(v=>v!=null));
+  const diag = {
+    x: [0, lineMax],
+    y: [0, lineMax],
+    mode: 'lines',
+    line: { dash: 'dot' },
+    hoverinfo: 'skip',
+    name: 'No discount line'
+  };
+
+  const pts = {
+    x, y, hovertemplate: '%{text}<extra></extra>', text: hover,
+    mode: 'markers',
+    type: 'scattergl',
+    name: 'Game',
+    marker: { size: 9, opacity: .85 }
+  };
+
+  Plotly.react('scatter', [diag, pts], {
+    title: 'Price Now vs Estimated Original (lower is better)',
+    xaxis: { title: 'Estimated Original Price ($)' },
+    yaxis: { title: 'Current Price ($)' },
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: '#e5eaef' },
+    legend: { orientation: 'h' },
+    margin: { t: 40, r: 10, l: 50, b: 50 }
+  }, {responsive: true, displaylogo: false});
+
+  // Histogram of discounts
+  Plotly.react('hist', [{
+    x: F.map(d => d.disc_frac*100),
+    type: 'histogram',
+    nbinsx: 20,
+    name: 'Discount %'
+  }], {
+    title: 'Discount Distribution (%)',
+    xaxis: { title: 'Discount (%)' },
+    yaxis: { title: 'Games' },
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: '#e5eaef' },
+    margin: { t: 40, r: 10, l: 50, b: 50 }
+  }, {responsive:true, displaylogo:false});
+
+  // Bar: Average discount by Recent Review sentiment
+  const groups = {}
+  F.forEach(d => {
+    const k = d.recentReviews || 'Unknown';
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(d.disc_frac);
+  });
+  const cats = Object.keys(groups).sort((a,b)=>a.localeCompare(b));
+  const means = cats.map(k => groups[k].reduce((s,v)=>s+v,0)/groups[k].length*100);
+  const counts = cats.map(k => groups[k].length);
+
+  Plotly.react('bar', [{
+    x: cats, y: means, type: 'bar',
+    text: counts.map(c=>`n=${c}`), textposition: 'auto',
+    hovertemplate: '%{x}<br>Avg discount: %{y:.1f}%<br>%{text}<extra></extra>'
+  }], {
+    title: 'Average Discount by Recent Review Sentiment',
+    xaxis: { tickangle: -20 },
+    yaxis: { title: 'Average Discount (%)', rangemode: 'tozero' },
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: '#e5eaef' },
+    margin: { t: 40, r: 10, l: 50, b: 70 }
+  }, {responsive:true, displaylogo:false});
+
+  // Top savings list
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  F.filter(d => d.savings != null).sort((a,b)=>b.savings-a.savings).slice(0,24).forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `
+      <div>
+        <div class="game-title">${d.title}</div>
+        <div class="muted">${d.recentReviews} · ${d.orig_price?dollars(d.orig_price):'—'} → <span class="price">$${d.price_num.toFixed(2)}</span> · <span class="disc">-${(d.disc_frac*100).toFixed(0)}%</span></div>
+      </div>
+      <div class="price">Save $${d.savings?d.savings.toFixed(2):'0.00'}</div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+[q, priceMin, priceMax, discMin, discMax, sent].forEach(el => el.addEventListener('input', drawAll));
+
+// Initial draw
+drawAll();
+</script>
+</body>
+</html>
