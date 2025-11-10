@@ -72,11 +72,10 @@ Satu Scatter Plot Besar: Alternatif lain adalah bubble chart tunggal (Harga vs. 
 
 - Pembagian Kerja
 
-1. Edril Marfadli : Desain UI/UX & Styling
-2. Aqilah Fikry Albari:
+1. Edril Marfadli : Dataset & csv
+2. Aqilah Fikry Albari: HTML
 3. c
 4. x
-5. x
    
 **Aspek yang Memakan Waktu Terbanyak:
 **
