@@ -4,9 +4,7 @@ Sebuah dashboard visualisasi data interaktif untuk menemukan penawaran (deal) ga
 🚀** Demo Interaktif**
 Visualisasi ini di-hosting menggunakan GitHub Pages. Anda bisa mengakses versi livenya di sini:
 
-[https://<NAMA-PENGGUNA-ANDA>.github.io/<NAMA-REPO-ANDA>/steam_deal_explorer.html](https://EdrilMarfadli.github.io/SteamDealExplorer/steam_deal_explorer.html)
-
-(PENTING: Ganti <NAMA-PENGGUNA-ANDA> dan <NAMA-REPO-ANDA> dengan nama pengguna dan nama repositori GitHub Anda)
+[[https://<NAMA-PENGGUNA-ANDA>.github.io/<NAMA-REPO-ANDA>/steam_deal_explorer.html](https://EdrilMarfadli.github.io/SteamDealExplorer/steam_deal_explorer.html)](https://edrilmarfadli.github.io/SteamDealExplorer/steam_deal_explorer.html)
 
 📖 **Tentang Proyek Ini**
 Seringkali sulit untuk menemukan game yang bagus sekaligus murah di Steam. Diskon besar (misalnya -80%) belum tentu berarti gamenya bagus (bisa jadi ulasannya 'Mixed' atau 'Mostly Negative'). Sebaliknya, game berkualitas tinggi (ulasSAn 'Overwhelmingly Positive') mungkin jarang diskon.
